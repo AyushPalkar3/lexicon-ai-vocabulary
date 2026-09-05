@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/db/prisma";
 import { LibraryView } from "@/components/vocabulary/LibraryView";
-import type { WordItem, PhraseItem, Difficulty } from "@/lib/types/vocabulary";
+import type { WordItem, PhraseItem, Difficulty, WordMeaningEntry } from "@/lib/types/vocabulary";
 
 // Explicit row shapes for the map callbacks below. @prisma/client resolves
 // to an untyped stub until `prisma generate` has been run (see prisma/README.md),
@@ -14,6 +14,7 @@ type WordRow = {
   partOfSpeech: string;
   difficulty: Difficulty;
   synonyms: string[];
+  meanings: WordMeaningEntry[] | null;
   createdAt: Date;
 };
 
@@ -45,6 +46,7 @@ export default async function LibraryPage() {
     partOfSpeech: w.partOfSpeech,
     difficulty: w.difficulty,
     synonyms: w.synonyms,
+    meanings: w.meanings ?? undefined,
     createdAt: w.createdAt.toISOString(),
   }));
 

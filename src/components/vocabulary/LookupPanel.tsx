@@ -119,17 +119,38 @@ export function LookupPanel() {
             kind={result.type}
             eyebrow={
               result.type === "word"
-                ? `${result.partOfSpeech} · ${result.difficulty}`
+                ? result.meanings && result.meanings.length > 1
+                  ? result.difficulty
+                  : `${result.partOfSpeech} · ${result.difficulty}`
                 : `${result.phraseType} · ${result.difficulty}`
             }
           >
             <p className="font-display text-2xl text-ink">
               {result.type === "word" ? result.word : result.phrase}
             </p>
-            <p className="mt-2 text-sm text-ink-soft">{result.meaning}</p>
-            <p className="mt-3 border-t border-rule-soft pt-3 font-sans text-sm italic text-ink-soft">
-              &ldquo;{result.exampleSentence}&rdquo;
-            </p>
+
+            {result.type === "word" && result.meanings && result.meanings.length > 1 ? (
+              <div className="mt-2 flex flex-col gap-3">
+                {result.meanings.map((m, i) => (
+                  <div key={i} className={i > 0 ? "border-t border-rule-soft pt-3" : ""}>
+                    <p className="font-mono text-[11px] uppercase tracking-wider text-word">
+                      Meaning {i + 1} — {m.context} · {m.partOfSpeech}
+                    </p>
+                    <p className="mt-1 text-sm text-ink-soft">{m.meaning}</p>
+                    <p className="mt-2 font-sans text-sm italic text-ink-soft">
+                      &ldquo;{m.exampleSentence}&rdquo;
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <p className="mt-2 text-sm text-ink-soft">{result.meaning}</p>
+                <p className="mt-3 border-t border-rule-soft pt-3 font-sans text-sm italic text-ink-soft">
+                  &ldquo;{result.exampleSentence}&rdquo;
+                </p>
+              </>
+            )}
             {(result.type === "word" ? result.synonyms : result.similarPhrases).length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {(result.type === "word" ? result.synonyms : result.similarPhrases).map((s) => (

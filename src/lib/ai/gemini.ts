@@ -39,26 +39,35 @@ const DIFFICULTY_ENUM = ["beginner", "intermediate", "advanced"];
 // These JSON schemas exist purely to steer Gemini's structured output —
 // analysisResultSchema (Zod, from schemas.ts) is still the actual source of
 // truth and the only thing that decides whether a response is accepted.
+const WORD_MEANING_ENTRY_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    meaning: { type: Type.STRING },
+    exampleSentence: { type: Type.STRING },
+    partOfSpeech: { type: Type.STRING },
+    context: { type: Type.STRING },
+  },
+  required: ["meaning", "exampleSentence", "partOfSpeech", "context"],
+};
+
+// Note: minItems/maxItems are real fields on Gemini's Schema type, but the
+// SDK types them as strings (a quirk of the underlying proto format), not
+// numbers — confirmed against @google/genai's own .d.ts.
 const WORD_SCHEMA = {
   type: Type.OBJECT,
   properties: {
     type: { type: Type.STRING, enum: ["word"] },
     word: { type: Type.STRING },
-    meaning: { type: Type.STRING },
-    exampleSentence: { type: Type.STRING },
-    partOfSpeech: { type: Type.STRING },
+    meanings: {
+      type: Type.ARRAY,
+      items: WORD_MEANING_ENTRY_SCHEMA,
+      minItems: "1",
+      maxItems: "4",
+    },
     difficulty: { type: Type.STRING, enum: DIFFICULTY_ENUM },
     synonyms: { type: Type.ARRAY, items: { type: Type.STRING } },
   },
-  required: [
-    "type",
-    "word",
-    "meaning",
-    "exampleSentence",
-    "partOfSpeech",
-    "difficulty",
-    "synonyms",
-  ],
+  required: ["type", "word", "meanings", "difficulty", "synonyms"],
 };
 
 const PHRASE_SCHEMA = {
@@ -184,6 +193,8 @@ export async function analyzeVocabInput(input: string): Promise<AnalysisResult> 
     throw new AIResponseError("The AI response was not valid JSON");
   }
 
+  parsedJson = synthesizePrimaryWordFields(parsedJson);
+
   const result = analysisResultSchema.safeParse(parsedJson);
   if (!result.success) {
     throw new AIResponseError(
@@ -192,6 +203,43 @@ export async function analyzeVocabInput(input: string): Promise<AnalysisResult> 
   }
 
   return result.data;
+}
+
+/**
+ * Gemini is only asked for a "meanings" array (see WORD_SCHEMA) — it never
+ * duplicates that into top-level meaning/exampleSentence/partOfSpeech
+ * fields itself. Those top-level fields still need to exist for backward
+ * compatibility (the database columns, and any code that hasn't been
+ * updated to look at "meanings"), so we derive them here from meanings[0]
+ * before validation, rather than asking the model to produce redundant
+ * data it could get inconsistent.
+ */
+function synthesizePrimaryWordFields(json: unknown): unknown {
+  if (
+    !json ||
+    typeof json !== "object" ||
+    (json as { type?: unknown }).type !== "word"
+  ) {
+    return json;
+  }
+
+  const meanings = (json as { meanings?: unknown }).meanings;
+  if (!Array.isArray(meanings) || meanings.length === 0) {
+    return json;
+  }
+
+  const primary = meanings[0] as {
+    meaning?: unknown;
+    exampleSentence?: unknown;
+    partOfSpeech?: unknown;
+  };
+
+  return {
+    ...json,
+    meaning: primary.meaning,
+    exampleSentence: primary.exampleSentence,
+    partOfSpeech: primary.partOfSpeech,
+  };
 }
 
 /**

@@ -1,5 +1,12 @@
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 
+export type WordMeaningEntry = {
+  meaning: string;
+  exampleSentence: string;
+  partOfSpeech: string;
+  context: string;
+};
+
 export type WordItem = {
   id: string;
   word: string;
@@ -8,6 +15,9 @@ export type WordItem = {
   partOfSpeech: string;
   difficulty: Difficulty;
   synonyms: string[];
+  // Present only when the word has more than one distinct common meaning.
+  // Absent/undefined means "one meaning" — use the fields above.
+  meanings?: WordMeaningEntry[];
   createdAt: string;
 };
 

@@ -1,4 +1,4 @@
-import { WORD_SHAPE_DESCRIPTION, WORD_EXAMPLE } from "./wordPrompt";
+import { WORD_SHAPE_DESCRIPTION, WORD_EXAMPLE_SINGLE_MEANING, WORD_EXAMPLE_MULTIPLE_MEANINGS } from "./wordPrompt";
 import { PHRASE_SHAPE_DESCRIPTION, PHRASE_EXAMPLE } from "./phrasePrompt";
 
 const SYSTEM_PROMPT = `You are the vocabulary-analysis engine for an English learning app.
@@ -12,8 +12,11 @@ Given a single word or phrase submitted by a learner, you must:
 If it is a WORD, return this shape:
 ${WORD_SHAPE_DESCRIPTION}
 
-Example:
-${WORD_EXAMPLE}
+Example — a word with one common meaning:
+${WORD_EXAMPLE_SINGLE_MEANING}
+
+Example — a word with multiple common meanings:
+${WORD_EXAMPLE_MULTIPLE_MEANINGS}
 
 If it is a PHRASE, return this shape:
 ${PHRASE_SHAPE_DESCRIPTION}

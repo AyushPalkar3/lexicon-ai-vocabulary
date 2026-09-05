@@ -2,14 +2,30 @@ import { z } from "zod";
 
 export const difficultySchema = z.enum(["beginner", "intermediate", "advanced"]);
 
+export const wordMeaningEntrySchema = z.object({
+  meaning: z.string().trim().min(1),
+  exampleSentence: z.string().trim().min(1),
+  partOfSpeech: z.string().trim().min(1),
+  context: z.string().trim().min(1),
+});
+
 export const wordAnalysisSchema = z.object({
   type: z.literal("word"),
   word: z.string().trim().min(1),
+  // Primary meaning — always present, unchanged from before this feature.
+  // Existing saved words and any code that only reads these three fields
+  // keep working without modification. When a word has multiple common
+  // meanings, this is a synthesized copy of meanings[0].
   meaning: z.string().trim().min(1),
   exampleSentence: z.string().trim().min(1),
   partOfSpeech: z.string().trim().min(1),
   difficulty: difficultySchema,
   synonyms: z.array(z.string().trim().min(1)).max(6).default([]),
+  // New, optional: the full set of distinct meanings (1-4) when a word has
+  // more than one common meaning a learner would actually encounter.
+  // Absent/undefined is equivalent to "one meaning" and callers should
+  // fall back to the primary meaning/exampleSentence/partOfSpeech above.
+  meanings: z.array(wordMeaningEntrySchema).min(1).max(4).optional(),
 });
 
 export const phraseAnalysisSchema = z.object({
@@ -30,6 +46,7 @@ export const analysisResultSchema = z.discriminatedUnion("type", [
   phraseAnalysisSchema,
 ]);
 
+export type WordMeaningEntry = z.infer<typeof wordMeaningEntrySchema>;
 export type WordAnalysis = z.infer<typeof wordAnalysisSchema>;
 export type PhraseAnalysis = z.infer<typeof phraseAnalysisSchema>;
 export type AnalysisResult = z.infer<typeof analysisResultSchema>;

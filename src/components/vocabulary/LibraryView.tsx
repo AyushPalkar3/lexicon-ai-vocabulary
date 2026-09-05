@@ -102,12 +102,38 @@ export function LibraryView({
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {showWords &&
             filteredWords.map((w) => (
-              <IndexCard key={w.id} kind="word" eyebrow={`${w.partOfSpeech} · ${w.difficulty}`}>
+              <IndexCard
+                key={w.id}
+                kind="word"
+                eyebrow={
+                  w.meanings && w.meanings.length > 1
+                    ? w.difficulty
+                    : `${w.partOfSpeech} · ${w.difficulty}`
+                }
+              >
                 <p className="font-display text-2xl text-ink">{w.word}</p>
-                <p className="mt-2 text-sm text-ink-soft">{w.meaning}</p>
-                <p className="mt-3 border-t border-rule-soft pt-3 font-sans text-sm italic text-ink-soft">
-                  &ldquo;{w.exampleSentence}&rdquo;
-                </p>
+                {w.meanings && w.meanings.length > 1 ? (
+                  <div className="mt-2 flex flex-col gap-3">
+                    {w.meanings.map((m, i) => (
+                      <div key={i} className={i > 0 ? "border-t border-rule-soft pt-3" : ""}>
+                        <p className="font-mono text-[11px] uppercase tracking-wider text-word">
+                          Meaning {i + 1} — {m.context} · {m.partOfSpeech}
+                        </p>
+                        <p className="mt-1 text-sm text-ink-soft">{m.meaning}</p>
+                        <p className="mt-2 font-sans text-sm italic text-ink-soft">
+                          &ldquo;{m.exampleSentence}&rdquo;
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <p className="mt-2 text-sm text-ink-soft">{w.meaning}</p>
+                    <p className="mt-3 border-t border-rule-soft pt-3 font-sans text-sm italic text-ink-soft">
+                      &ldquo;{w.exampleSentence}&rdquo;
+                    </p>
+                  </>
+                )}
                 {w.synonyms.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {w.synonyms.map((s) => (

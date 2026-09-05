@@ -44,6 +44,13 @@ model Word {
   partOfSpeech    String
   difficulty      Difficulty
   synonyms        String[]   @default([])
+  // Optional structured list of ALL distinct meanings when a word has more
+  // than one commonly-used sense (e.g. "bank", "native", "light"). Shape:
+  // [{ meaning, exampleSentence, partOfSpeech, context }, ...], 1-4 entries.
+  // Null/absent for existing rows saved before this feature, and for words
+  // with only one meaning going forward — the columns above always hold the
+  // primary meaning regardless, so nothing that reads only those breaks.
+  meanings        Json?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
